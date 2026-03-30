@@ -40,6 +40,7 @@ Trend = Literal["up", "down", "flat"]
 @dataclass
 class Config:
     discord_webhook_url: str
+    discord_role_id: str | None
     symbol: str
     h4_trend_bars: int
     dry_run: bool
@@ -55,6 +56,9 @@ def load_config() -> Config:
     if not webhook and not dry:
         logger.error("DISCORD_WEBHOOK_URL is required unless DRY_RUN=1")
         sys.exit(1)
+
+    role_id_raw = os.environ.get("DISCORD_ROLE_ID", "").strip()
+    role_id = role_id_raw or None
 
     h4_bars = int(os.environ.get("H4_TREND_BARS", "6"))
     if h4_bars < 1:
@@ -76,6 +80,7 @@ def load_config() -> Config:
 
     return Config(
         discord_webhook_url=webhook,
+        discord_role_id=role_id,
         symbol=os.environ.get("SYMBOL", "US100Cash").strip(),
         h4_trend_bars=h4_bars,
         dry_run=dry,
@@ -192,15 +197,22 @@ def bar_time_key(ts: pd.Timestamp) -> int:
 
 def send_discord(cfg: Config, text: str) -> None:
     if cfg.dry_run:
-        logger.info("[DRY_RUN] Discord: %s", text)
+        mention = f"<@&{cfg.discord_role_id}> " if cfg.discord_role_id else ""
+        logger.info("[DRY_RUN] Discord: %s", f"{mention}{text}")
         return
     if not cfg.discord_webhook_url:
         logger.warning("No DISCORD_WEBHOOK_URL; skipping POST")
         return
     try:
+        content = text
+        if cfg.discord_role_id:
+            prefix = f"<@&{cfg.discord_role_id}> "
+            # Keep room for the role mention so Discord parses it fully.
+            content = prefix + text[: max(0, 2000 - len(prefix))]
+
         r = requests.post(
             cfg.discord_webhook_url,
-            json={"content": text[:2000]},
+            json={"content": content[:2000]},
             timeout=15,
         )
         r.raise_for_status()

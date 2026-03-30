@@ -11,7 +11,8 @@ Python bot that connects to **MetaTrader 5** (XM account, symbol such as `US100C
 ## Setup
 
 1. Copy `.env.example` to `.env` and set `DISCORD_WEBHOOK_URL` (omit if you use `DRY_RUN=1` only).
-2. Install dependencies:
+2. (Optional) Set `DISCORD_ROLE_ID` to tag/mention a role when an alert is fired.
+3. Install dependencies:
 
 ```bash
 pip install -r requirements.txt
@@ -25,7 +26,7 @@ python bot.py
 
 On first start the bot records the current last closed M5 bar and **does not** send alerts until the **next** M5 close (avoids spamming history). Progress is stored in `state.json` so restarts do not re-alert the same bar.
 
-Optional environment variables: `MT5_LOGIN`, `MT5_PASSWORD`, `MT5_SERVER` if you are not already logged in via the terminal; `MT5_PATH` if `MetaTrader5` cannot find `terminal64.exe`; `H4_TREND_BARS` (default `6`); `DRY_RUN=1` to log only.
+Optional environment variables: `DISCORD_ROLE_ID` (role to mention in Discord); `MT5_LOGIN`, `MT5_PASSWORD`, `MT5_SERVER` if you are not already logged in via the terminal; `MT5_PATH` if `MetaTrader5` cannot find `terminal64.exe`; `H4_TREND_BARS` (default `6`); `DRY_RUN=1` to log only.
 
 ## Notes
 
